@@ -1,0 +1,22 @@
+name: Linux C checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  synthetic-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build development test image
+        run: docker build --tag icl-ci .
+      - name: Non-root offline tests and sanitizers
+        timeout-minutes: 12
+        run: >-
+          docker run --rm --network none --cap-drop ALL
+          --security-opt no-new-privileges --pids-limit 256 --memory 1g --cpus 2
+          --user 1000:1000 icl-ci make test sanitize demo-assert package
